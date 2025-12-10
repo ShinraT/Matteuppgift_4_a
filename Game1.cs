@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Matteuppgift_4_a;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -63,7 +64,7 @@ namespace Matteuppgift_4_a
         public Matrix GenerateRotationMatrix(float grader)
         {
             float rad = GraderTillRadianer((float)grader);
-            row1 = new Vector4((float)Math.Cos(rad), (float)-Math.Sin(rad), 0, 0);
+            row1 = new Vector4((float)Math.Cos(rad), -(float)Math.Sin(rad), 0, 0);
             row2 = new Vector4((float)Math.Sin(rad), (float)Math.Cos(rad), 0, 0);
             row3 = new Vector4(0, 0, 1, 0);
             row4 = new Vector4(0, 0, 0, 1);
@@ -71,24 +72,57 @@ namespace Matteuppgift_4_a
             return rotation;
 
         }
+        public Matrix GenerateRotationMatrixT(float grader)
+        {
+            float rad = GraderTillRadianer((float)grader);
+            row1 = new Vector4((float)Math.Cos(rad), (float)Math.Sin(rad), 0, 0);
+            row2 = new Vector4(-(float)Math.Sin(rad), (float)Math.Cos(rad), 0, 0);
+            row3 = new Vector4(0, 0, 1, 0);
+            row4 = new Vector4(0, 0, 0, 1);
+            rotation = new Matrix(row1, row2, row3, row4);
+            return rotation;
 
-        public void Rotera(float grader)
+        }
+
+        public void RoteraMedMatris(float grader)
         {
             Matrix rotation = GenerateRotationMatrix(grader);
 
             for (int i = 0; i < punkter.Count; i++)
             {
-                punkter[i] = RoteraPunkterna(punkter[i], rotation);
+                Vector4 tempPos = punkter[i] - mittPunkt;
+                tempPos = RoteraPunkterna(tempPos, rotation);
+                punkter[i] = tempPos + mittPunkt;
+            }
+        }
+        public void RoteraMedMatrixT(float grader)
+        {
+            Matrix rotation = GenerateRotationMatrixT(grader);
+
+            for (int i = 0; i < punkter.Count; i++)
+            {
+                Vector4 tempPos = punkter[i] - mittPunkt;
+                tempPos = RoteraPunkternaMedMatrixT(tempPos, rotation);
+                punkter[i] = tempPos + mittPunkt;
             }
         }
 
-        public static Vector4 RoteraPunkterna(Vector4 p, Matrix m)
+        public static Vector4 RoteraPunkterna(Vector4 p, Matrix m) // Otransponerad matris, väljer att multiplicera matematiskt korrekt tal med varandra enligt radmatris * kolumVektor
         {
             return new Vector4(
-                p.X * m.M11 + p.Y * m.M12 + p.Z * m.M13 + p.W * m.M14,
-                p.X * m.M21 + p.Y * m.M22 + p.Z * m.M23 + p.W * m.M24,
-                p.X * m.M31 + p.Y * m.M32 + p.Z * m.M33 + p.W * m.M34,
-                p.X * m.M41 + p.Y * m.M42 + p.Z * m.M43 + p.W * m.M44
+                p.X * m.M11 + p.Y * m.M21 + p.Z * m.M31 + p.W * m.M41, // X koordinat
+                p.X * m.M12 + p.Y * m.M22 + p.Z * m.M42 + p.W * m.M42, // Y koordinat
+                p.X * m.M13 + p.Y * m.M24 + p.Z * m.M33 + p.W * m.M43, // Z koordinat
+                p.X * m.M14 + p.Y * m.M24 + p.Z * m.M34 + p.W * m.M44 // W koordinat
+            );
+        }
+        public static Vector4 RoteraPunkternaMedMatrixT(Vector4 p, Matrix m) // Transponerad matris, där vi multiplicerar med en radVektor * kolumnMatris rent matematiskt. Gör detta pga Monogames syntax system.
+        {
+            return new Vector4(
+                p.X * m.M11 + p.Y * m.M12 + p.Z * m.M13 + p.W * m.M14, // X koordinat
+                p.X * m.M21 + p.Y * m.M22 + p.Z * m.M23 + p.W * m.M24, // Y koordinat
+                p.X * m.M31 + p.Y * m.M32 + p.Z * m.M33 + p.W * m.M34, // Z koordinat
+                p.X * m.M41 + p.Y * m.M42 + p.Z * m.M43 + p.W * m.M44 // W koordinat
             );
         }
         protected override void Update(GameTime gameTime)
@@ -96,7 +130,12 @@ namespace Matteuppgift_4_a
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            
+            KeyMouseReader.Update();
+
+            if (KeyMouseReader.keyState.IsKeyDown(Keys.R))
+            {
+                RoteraMedMatris(2f);
+            }
 
             // TODO: Add your update logic here
 
@@ -108,7 +147,7 @@ namespace Matteuppgift_4_a
             GraphicsDevice.Clear(Color.Black);
             spriteBatch.Begin();
 
-            foreach(var pos in punkter)
+            foreach (var pos in punkter)
             {
                 spriteBatch.Draw(pixel, new Vector2(pos.X, pos.Y), null, Color.BlanchedAlmond, 0f, Vector2.Zero, new Vector2(5f, 5f), SpriteEffects.None, 0f);
             }
