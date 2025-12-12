@@ -61,7 +61,7 @@ namespace Matteuppgift_4_a
             return grader * (MathF.PI / 180);
         }
 
-        public Matrix GenerateRotationMatrix(float grader) // Rotationsmatris i radform icke transponerad.
+        public Matrix GenerateRotationMatrix(float grader) // Rotationsmatris för monogame.
         {
             float rad = GraderTillRadianer((float)grader);
             row1 = new Vector4((float)Math.Cos(rad), -(float)Math.Sin(rad), 0, 0);
@@ -72,52 +72,41 @@ namespace Matteuppgift_4_a
             return rotation;
 
         }
-        public Matrix GenerateRotationMatrixT(float grader) // Rotationsmatris som är transponerad
-        {
-            float rad = GraderTillRadianer((float)grader);
-            row1 = new Vector4((float)Math.Cos(rad), (float)Math.Sin(rad), 0, 0); // Första raden i matrisen
-            row2 = new Vector4(-(float)Math.Sin(rad), (float)Math.Cos(rad), 0, 0); // andra raden i matrisen
-            row3 = new Vector4(0, 0, 1, 0); // Tredje raden i matrisen
-            row4 = new Vector4(0, 0, 0, 1); // Fjärde raden i matrisen
-            rotation = new Matrix(row1, row2, row3, row4); // Hela matrisen tillsammans med de olika vektorerna. 
-            return rotation; // Returnerar en komplett matris.
-
-        }
-
-        public void RoteraMedMatris(float grader) // Metoden som roterar punkterna i listan med hjälp av matrisen.
+      
+        public void RoteraMedMatrisMotUrs(float grader) // Metoden som roterar punkterna moturs i listan med hjälp av matrisen.
         {
             Matrix rotation = GenerateRotationMatrix(grader);
 
             for (int i = 0; i < punkter.Count; i++)
             {
                 Vector4 tempPos = punkter[i] - mittPunkt;
-                tempPos = RoteraPunkterna(tempPos, rotation);
+                tempPos = MatrisMultiplikationFel(tempPos, rotation);
                 punkter[i] = tempPos + mittPunkt;
             }
         }
-        public void RoteraMedMatrixT(float grader)
+        public void RoteraMedMatrisMedUrs(float grader) // Metoden som roterar punkterna medurs i listan med hjälp av matrisen.
         {
-            Matrix rotation = GenerateRotationMatrixT(grader);
+            Matrix rotation = GenerateRotationMatrix(grader);
 
             for (int i = 0; i < punkter.Count; i++)
             {
                 Vector4 tempPos = punkter[i] - mittPunkt;
-                tempPos = RoteraPunkternaMedMatrixT(tempPos, rotation);
+                tempPos = MatrisMultiplikationRätt(rotation, tempPos);
                 punkter[i] = tempPos + mittPunkt;
             }
         }
 
-        public static Vector4 RoteraPunkterna(Vector4 p, Matrix m) // Otransponerad matris, väljer att multiplicera matematiskt korrekt tal med varandra enligt radmatris * kolumVektor
-        { // Uträkningen, matrismultiplikation
+        public static Vector4 MatrisMultiplikationFel(Vector4 p, Matrix m) // Detta blir fel för vi multiplicerar vektorn eller informationsmatrisen med en transformMatris.
+        { // Uträkningen, matrismultiplikation. I detta fallet p * Matrisen.
             return new Vector4(
                 p.X * m.M11 + p.Y * m.M21 + p.Z * m.M31 + p.W * m.M41, // X koordinat
-                p.X * m.M12 + p.Y * m.M22 + p.Z * m.M42 + p.W * m.M42, // Y koordinat
-                p.X * m.M13 + p.Y * m.M24 + p.Z * m.M33 + p.W * m.M43, // Z koordinat
+                p.X * m.M12 + p.Y * m.M22 + p.Z * m.M32 + p.W * m.M42, // Y koordinat
+                p.X * m.M13 + p.Y * m.M23 + p.Z * m.M33 + p.W * m.M43, // Z koordinat
                 p.X * m.M14 + p.Y * m.M24 + p.Z * m.M34 + p.W * m.M44 // W koordinat
             );
         }
-        public static Vector4 RoteraPunkternaMedMatrixT(Vector4 p, Matrix m) // Transponerad matris, där vi multiplicerar med en radVektor * kolumnMatris rent matematiskt. Gör detta pga Monogames syntax system.
-        {// Uträkningen matrismultiplikation
+        public static Vector4 MatrisMultiplikationRätt(Matrix m, Vector4 p) // Det rätta sättet att multiplicera en matris med en Vektor eller informationsmatris.
+        {// Uträkningen matrismultiplikation. I detta fallet Matrise * p. 
             return new Vector4(
                 p.X * m.M11 + p.Y * m.M12 + p.Z * m.M13 + p.W * m.M14, // X koordinat
                 p.X * m.M21 + p.Y * m.M22 + p.Z * m.M23 + p.W * m.M24, // Y koordinat
@@ -134,7 +123,7 @@ namespace Matteuppgift_4_a
 
             if (KeyMouseReader.keyState.IsKeyDown(Keys.R)) // Roterar punkterna när man håller nere R. 
             {
-                RoteraMedMatris(2f);
+                RoteraMedMatrisMotUrs(2f);
             }
 
             // TODO: Add your update logic here
